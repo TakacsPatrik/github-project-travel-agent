@@ -3,7 +3,7 @@ python-dotenv
 pydantic
 requests
 beautifulsoup4
-duckduckgo-search
-langchain-core
-langchain-community
+duckduckgo-search>=6.0.0
+langchain-core>=0.2.0
+langchain-community>=0.2.0
 langchain-google-genai
