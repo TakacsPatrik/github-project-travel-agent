@@ -63,19 +63,22 @@ def get_expanded_search_results(keywords: list, max_results: int = 5) -> str:
     return formatted_results
 
 def scrape_full_text(url: str) -> str:
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+    }
     try:
-        response = requests.get(url, timeout=10)
+        response = requests.get(url, headers=headers, timeout=10)
         response.raise_for_status()
         soup = BeautifulSoup(response.text, "html.parser")
         
-        for script in soup(["script", "style"]):
+        for script in soup(["script", "style", "nav", "footer"]): # Érdemes a nav-ot és footer-t is kiszedni
             script.decompose()
             
         text = soup.get_text(separator=" ")
         lines = [line.strip() for line in text.splitlines()]
         return " ".join(p for p in lines if p)
     except Exception as e:
-        return f"Hiba a következő oldal letöltésekor ({url}): {e}"
+        return "" # A hibaüzenet helyett inkább üres stringet adj vissza (lásd a 3. pontot)
 
 # =====================================================================
 # 4. LLM ÉS LÁNCOK INICIALIZÁLÁSA
