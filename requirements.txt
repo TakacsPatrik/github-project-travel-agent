@@ -1,0 +1,8 @@
+streamlit
+python-dotenv
+pydantic
+requests
+beautifulsoup4
+langchain-core
+langchain-community
+langchain-google-genai
