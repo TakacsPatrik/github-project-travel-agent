@@ -1,5 +1,15 @@
+"""
+fejlesztési ötletek:
+- időintervallumok a programokhoz, mi mennyi időt igényel
+- lehetőség arra, hogy a felhasználó kiválassza, melyik forrásokat szeretné felhasználni az útitervhez
+- chates felület, ahol a felhasználó kérdezhet, és a rendszer válaszolhat
+- csevegés mentésének lehetősége, hogy a felhasználó később visszanézhesse a beszélgetést
+- lehetőségek felajánlása csetelésnél, gyorsgombokkal (pl. "Mutass több éttermet", "Mutass több látnivalót", "Mutass több tippet", "Autókölcsönzési lehetőségek", "Mutass szállást")
+"""
+
 import os
 from typing import List, Optional
+from dotenv import load_dotenv
 from pydantic import BaseModel, Field
 import requests
 from bs4 import BeautifulSoup
@@ -13,18 +23,16 @@ from langchain_community.utilities.duckduckgo_search import DuckDuckGoSearchAPIW
 # =====================================================================
 # 1. KÖRNYEZETI BEÁLLÍTÁSOK ÉS OLDAL CONFIG
 # =====================================================================
+load_dotenv()
+
 st.set_page_config(
     page_title="AI Utazási Tanácsadó",
     page_icon="🗺️",
     layout="centered"
 )
 
-# Ellenőrizzük, hogy a Streamlit Secrets tartalmazza-e a kulcsot
-if "GEMINI_API_KEY" not in st.secrets:
-    st.error("Hiba: A GEMINI_API_KEY nem található a Streamlit Secrets-ben!")
-    st.stop()
-
-gemini_key = st.secrets["GEMINI_API_KEY"]
+if not os.getenv("GEMINI_API_KEY"):
+    st.error("Hiba: A GEMINI_API_KEY nem található a környezeti változók között!")
 
 # =====================================================================
 # 2. ADATSTRUKTÚRÁK (PYDANTIC MODELLEK)
@@ -75,7 +83,7 @@ def scrape_full_text(url: str) -> str:
 model = ChatGoogleGenerativeAI(
     model="gemini-3.1-flash-lite", 
     temperature=0.0,
-    api_key=gemini_key  # Itt a st.secrets-ből beolvasott kulcsot használjuk
+    api_key=os.getenv("GEMINI_API_KEY")
 )
 
 # 1. fázis: Kulcsszavak
@@ -116,6 +124,7 @@ chain3 = prompt_template3 | model
 st.title("🗺️ AI Utazási Tanácsadó & Ügynök")
 st.write("Írd be, hova szeretnél utazni, és a rendszer megkeresi a legfrissebb tippeket az interneten!")
 
+# Felhasználói input
 user_input = st.text_input(
     label="Milyen utazást tervezel?",
     placeholder="Pl.: Szeretnék egy 3 napos utazást tervezni Budapestre, éttermekkel és látnivalókkal."
@@ -125,6 +134,7 @@ if st.button("Útiterv generálása 🚀", type="primary"):
     if not user_input.strip():
         st.warning("Kérlek, írj be egy érvényes kérést!")
     else:
+        # A teljes folyamat futtatása vizuális visszajelzésekkel
         with st.spinner("🧠 1. Fázis: Kulcsszavak generálása..."):
             teszt = chain1.invoke({"user_input": user_input})
             
@@ -144,16 +154,17 @@ if st.button("Útiterv generálása 🚀", type="primary"):
             lekapart_adatok = "\n\n".join(weboldalak_tartalma)
             utiterv = chain3.invoke({"user_input": user_input, "lekapart_adatok": lekapart_adatok})
 
+        # --- EREDMÉNYEK MEGJELENÍTÉSE ---
         st.success("Az útiterv sikeresen elkészült!")
         
+        # 1. Az útiterv kiírása
         st.markdown("---")
-        # Biztonságos szöveg-kinyerés a struktúrából
-        if isinstance(utiterv.content, list) and len(utiterv.content) > 0 and "text" in utiterv.content[0]:
-            st.markdown(utiterv.content[0]["text"])
-        else:
-            st.markdown(utiterv.content)
+        st.markdown(utiterv.content[0]["text"])
         st.markdown("---")
         
+        # 2. A felhasznált linkek elegáns megjelenítése
         st.subheader("🔗 Felhasznált források és ötletek:")
         for forras in szurt_talalatok['selected_sources']:
+            # Streamlit link kártyák/gombok formájában
             st.markdown(f"**[{forras['category'].upper()}]** [{forras['title']}]({forras['link']})")
+
