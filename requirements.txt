@@ -3,6 +3,7 @@ python-dotenv
 pydantic
 requests
 beautifulsoup4
+duckduckgo-search
 langchain-core
 langchain-community
 langchain-google-genai
