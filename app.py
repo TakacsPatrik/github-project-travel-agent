@@ -73,7 +73,7 @@ def scrape_full_text(url: str) -> str:
 # 4. LLM ÉS LÁNCOK INICIALIZÁLÁSA
 # =====================================================================
 model = ChatGoogleGenerativeAI(
-    model="gemini-2.5-flash-lite", 
+    model="gemini-3.1-flash-lite", 
     temperature=0.0,
     api_key=gemini_key  # Itt a st.secrets-ből beolvasott kulcsot használjuk
 )
